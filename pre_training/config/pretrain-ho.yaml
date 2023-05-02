@@ -1,0 +1,68 @@
+task: pretrain
+
+tasks_info:
+  gene:  ## for low-level and mid-level,i.e., color, sr, scene, jigsaw
+    pre_t: 
+      resize_size: 256
+      crop_size: 224
+  scene:
+    size: 256
+  jigsaw:
+    size: 192
+    permu_path: "./data/permutations/permutations_hamming_max_1000.npy"
+
+
+model:
+  backbone: resnet50
+  # num_class: 7
+  pretrain: True
+  pretrained_path: '' #'./mid1.pth'    ## pretrain model, but not resume model, if set to 'tvof', then official torchvision pretrained model is used 
+
+
+dataset:
+  scene:
+    data_root: "/home/ubuntu16/ljx/datasets/places365_standard"
+    train_split: 'train_lbl.txt' ## txt
+    test_split: 'val_lbl.txt'
+  anp:
+    data_root: "/home/ubuntu16/ljx/datasets/anp"
+    train_split: "train.txt" 
+    test_split: "test.txt"
+  caption: 
+    data_root: "./artemis/artemis_official_data"
+  
+
+
+loader:
+  workers: 16  #total workers in one node
+  batch_size: 32 ## total batch size in one node
+
+solver:
+  epochs: 12
+  start_epoch: 0
+  base_lr: 0.01
+  decay_inter: 4
+  momentum: 0.9
+  weight_decay: 0.0001
+
+
+
+device:
+  mulp_dist_enable: True  ## if being set to True, all in the node gpus will be used
+  world_size: 1   ## total nodes (machine), note: world size will be adjusted to process num (ie, gpu num) during parsing 
+  rank: 0   ## node index, will be adjusted to process index during parsing
+  url: 'tcp://localhost:30007'
+  backend: nccl
+  gpu: Null  ## if not Null, mulp_dist_enable will be adjusted to False, if Null and mulp_dist_enable is False, DataParallel will be used, if Null mulp_dist_enable is True, multiple process dist will be used
+
+logger:
+  name: 'senpre'
+  path: './exp/log/resnet50_pretrain_mid.log'
+  time_stamp: True        ## add time stamp to the front of logname
+
+misc:
+  print_freq: 100
+  resume_path: Null
+  evaluate: False   ## just evaluate and return, not perform training
+  model_save_name: 'resnet50_mid.pth.tar'
+
